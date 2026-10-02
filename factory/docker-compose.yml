@@ -1,0 +1,166 @@
+# The factory: four Hermes seats, a build daemon and an egress proxy.
+#
+# Paths outside this repository come from the environment (setup writes them to
+# factory/.paths.env, which is not committed):
+#   FACTORY_LOCAL  folder holding .env and seats/<seat>/ (keys and BAND logins)
+#   KICKOFF_DIR    the hackathon kickoff checkout (specs, shipped tests, harness)
+#   CHECKS_DIR     where harness runs write their reports
+#
+# Every seat sees the same layout:
+#   /work/dark-factory-wearedevs   kickoff checkout, read-only
+#   /work/band-work/result         this repository (write access differs per seat)
+#   /work/band-work/checks         harness output
+#   /hermes                        the seat's own HERMES_HOME; SOUL.md is its mandate
+
+name: band-factory
+
+x-seat: &seat
+  image: band-factory-seat:latest
+  restart: unless-stopped
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  mem_limit: 4g
+  cpus: 2
+  pids_limit: 512
+  tmpfs:
+    - /tmp:size=2g,exec,uid=1000,gid=1000
+    - /home/agent:size=2g,exec,uid=1000,gid=1000
+  networks: [internal]
+  depends_on: [squid]
+
+x-seat-env: &seat-env
+  HERMES_HOME: /hermes
+  HOME: /home/agent
+  HTTP_PROXY: http://172.31.250.2:3128
+  HTTPS_PROXY: http://172.31.250.2:3128
+  http_proxy: http://172.31.250.2:3128
+  https_proxy: http://172.31.250.2:3128
+  NO_PROXY: localhost,127.0.0.1,172.31.250.0/24
+  no_proxy: localhost,127.0.0.1,172.31.250.0/24
+
+services:
+  squid:
+    image: ubuntu/squid:6.6-24.04_edge
+    restart: unless-stopped
+    volumes:
+      - ./squid.conf:/etc/squid/squid.conf:ro
+    networks:
+      internal: {ipv4_address: 172.31.250.2}
+      egress: {}
+
+  # Private Docker daemon for building and running stage services and the
+  # official harness. Seats never touch the host's Docker. It is privileged
+  # because Docker-in-Docker needs it, but it holds no host paths except the
+  # three below and reaches the internet only through squid.
+  dind:
+    image: docker:27-dind
+    restart: unless-stopped
+    privileged: true
+    mem_limit: 8g
+    cpus: 4
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+      HTTP_PROXY: http://172.31.250.2:3128
+      HTTPS_PROXY: http://172.31.250.2:3128
+      NO_PROXY: localhost,127.0.0.1,172.31.250.0/24
+    command: ["dockerd", "--host=tcp://0.0.0.0:2375", "--tls=false"]
+    volumes:
+      - dind-data:/var/lib/docker
+      # Same paths as in the seats, because the harness bind-mounts them.
+      - ${KICKOFF_DIR}:/work/dark-factory-wearedevs:ro
+      - ..:/work/band-work/result:ro
+      - ${CHECKS_DIR}:/work/band-work/checks
+    networks:
+      internal: {ipv4_address: 172.31.250.3}
+    depends_on: [squid]
+
+  # Planner: reads everything, writes only plans. No Docker.
+  planner:
+    <<: *seat
+    environment:
+      <<: *seat-env
+      GIT_AUTHOR_NAME: planner
+      GIT_AUTHOR_EMAIL: planner@factory.invalid
+      GIT_COMMITTER_NAME: planner
+      GIT_COMMITTER_EMAIL: planner@factory.invalid
+    volumes:
+      - ${FACTORY_LOCAL}/seats/planner:/hermes
+      - ../mandates/planner.md:/hermes/SOUL.md:ro
+      - ${KICKOFF_DIR}:/work/dark-factory-wearedevs:ro
+      - ..:/work/band-work/result:ro
+      - ../work/plans:/work/band-work/result/work/plans
+      - ../.git:/work/band-work/result/.git
+      - ${CHECKS_DIR}:/work/band-work/checks:ro
+
+  # Builder: writes the code. Builds and runs it on the private daemon.
+  builder:
+    <<: *seat
+    environment:
+      <<: *seat-env
+      DOCKER_HOST: tcp://172.31.250.3:2375
+      GIT_AUTHOR_NAME: builder
+      GIT_AUTHOR_EMAIL: builder@factory.invalid
+      GIT_COMMITTER_NAME: builder
+      GIT_COMMITTER_EMAIL: builder@factory.invalid
+    volumes:
+      - ${FACTORY_LOCAL}/seats/builder:/hermes
+      - ../mandates/builder.md:/hermes/SOUL.md:ro
+      - ${KICKOFF_DIR}:/work/dark-factory-wearedevs:ro
+      - ..:/work/band-work/result
+      - ../mandates:/work/band-work/result/mandates:ro
+      - .:/work/band-work/result/factory:ro
+      - ${CHECKS_DIR}:/work/band-work/checks
+
+  # Tester: code is read-only; writes only reports. Scratch copies go in /tmp.
+  tester:
+    <<: *seat
+    environment:
+      <<: *seat-env
+      DOCKER_HOST: tcp://172.31.250.3:2375
+      GIT_AUTHOR_NAME: tester
+      GIT_AUTHOR_EMAIL: tester@factory.invalid
+      GIT_COMMITTER_NAME: tester
+      GIT_COMMITTER_EMAIL: tester@factory.invalid
+    volumes:
+      - ${FACTORY_LOCAL}/seats/tester:/hermes
+      - ../mandates/tester.md:/hermes/SOUL.md:ro
+      - ${KICKOFF_DIR}:/work/dark-factory-wearedevs:ro
+      - ..:/work/band-work/result:ro
+      - ../work/reports:/work/band-work/result/work/reports
+      - ../.git:/work/band-work/result/.git
+      - ${CHECKS_DIR}:/work/band-work/checks
+
+  # Delivery: tidies and documents the stage folder, confirms it builds.
+  delivery:
+    <<: *seat
+    environment:
+      <<: *seat-env
+      DOCKER_HOST: tcp://172.31.250.3:2375
+      GIT_AUTHOR_NAME: delivery
+      GIT_AUTHOR_EMAIL: delivery@factory.invalid
+      GIT_COMMITTER_NAME: delivery
+      GIT_COMMITTER_EMAIL: delivery@factory.invalid
+    volumes:
+      - ${FACTORY_LOCAL}/seats/delivery:/hermes
+      - ../mandates/delivery.md:/hermes/SOUL.md:ro
+      - ${KICKOFF_DIR}:/work/dark-factory-wearedevs:ro
+      - ..:/work/band-work/result
+      - ../mandates:/work/band-work/result/mandates:ro
+      - .:/work/band-work/result/factory:ro
+      - ${CHECKS_DIR}:/work/band-work/checks
+
+networks:
+  internal:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.31.250.0/24
+          # Dynamic addresses come from the upper half, so squid (.2) and dind (.3)
+          # keep their fixed addresses.
+          ip_range: 172.31.250.128/25
+  egress: {}
+
+volumes:
+  dind-data:

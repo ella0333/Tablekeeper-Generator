@@ -1,0 +1,3 @@
+# Written by factory/setup.py: local paths only
+factory/.env
+__pycache__/

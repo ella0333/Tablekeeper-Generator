@@ -1,0 +1,55 @@
+# Hermes config for planner, builder and delivery. setup copies it into each
+# seat's HERMES_HOME as config.yaml. Secrets live in that folder's .env.
+model:
+  provider: openrouter
+  default: deepseek/deepseek-v4.1-flash
+fallback_model:
+  provider: openrouter
+  model: xiaomi/mimo-v2.6-flash
+
+plugins:
+  enabled: [band]
+
+# A BAND room is one shared conversation, so one session per room (the plugin's advice).
+group_sessions_per_user: false
+
+platforms:
+  band:
+    extra:
+      # The gateway trusts BAND's own access control (see the plugin's add-band skill).
+      dm_policy: allowlist
+      group_policy: allowlist
+
+agent:
+  max_turns: 200
+  # Only the tester spawns sub-agents.
+  disabled_toolsets: [delegation]
+
+# The container is the sandbox, so commands run without approval prompts.
+# A prompt would stall the seat, since nobody answers during a run.
+approvals:
+  mode: "off"
+
+terminal:
+  backend: local
+  cwd: /work/band-work/result
+  timeout: 1200
+
+display:
+  # A handoff split into parts arrives as several messages; queue them instead
+  # of interrupting the run that is reading part 1.
+  busy_input_mode: queue
+  # Post only the final reply, not mid-turn narration, so the room stays readable.
+  interim_assistant_messages: false
+
+onboarding:
+  profile_build: "off"
+
+# Every run starts from the mandate alone: no background self-review, no saved
+# skills or memories carried from one run into the next.
+auxiliary:
+  background_review:
+    enabled: false
+memory:
+  memory_enabled: false
+  user_profile_enabled: false

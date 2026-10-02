@@ -1,0 +1,4 @@
+#!/bin/sh
+# Runs the official hackathon harness from the kickoff checkout.
+# Always pass --out under /work/band-work/checks; the kickoff checkout is read-only.
+cd /work/dark-factory-wearedevs && exec /opt/harness/bin/python -m harness "$@"
