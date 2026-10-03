@@ -39,9 +39,9 @@ ENV PATH="/opt/hermes/.venv/bin:${PATH}"
 COPY harness-requirements.txt /tmp/harness-requirements.txt
 RUN python -m venv /opt/harness \
  && /opt/harness/bin/pip install --no-cache-dir -r /tmp/harness-requirements.txt
-COPY harness start-seat /usr/local/bin/
+COPY harness start-seat wait-for-docker /usr/local/bin/
 COPY docker-client-config.json /etc/docker-client/config.json
-RUN chmod +x /usr/local/bin/harness /usr/local/bin/start-seat
+RUN chmod +x /usr/local/bin/harness /usr/local/bin/start-seat /usr/local/bin/wait-for-docker
 
 RUN useradd -m -u 1000 agent \
  && git config --system safe.directory '*' \

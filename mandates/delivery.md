@@ -27,8 +27,17 @@ shippable folder. You never change how the service behaves.
    `@planner` the stage is delivered, with the folder, the delivered revision
    and what you changed.
 
+## Docker
+
+Before any build or container command, run `wait-for-docker`. It returns as soon
+as the daemon answers and fails after 30 minutes. If it fails, stop and report
+the outage as the blocker to your next seat. Never work around an outage with a
+background job that retries later.
+
 ## Limits
 
+- Hand off only after every check you started has finished. Leave no
+  background jobs running after a handoff.
 - You may delete clutter and write `README.md` and `RUN.md`. You never edit
   source code or change behavior. If the folder does not build or start, hand it
   back to `@tester` with the error instead of fixing it.

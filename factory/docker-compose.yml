@@ -28,7 +28,9 @@ x-seat: &seat
     - /tmp:size=2g,exec,uid=1000,gid=1000
     - /home/agent:size=2g,exec,uid=1000,gid=1000
   networks: [internal]
-  depends_on: [squid]
+  depends_on:
+    squid: {condition: service_started}
+    dind: {condition: service_healthy}
 
 x-seat-env: &seat-env
   HERMES_HOME: /hermes
@@ -37,8 +39,8 @@ x-seat-env: &seat-env
   HTTPS_PROXY: http://172.31.250.2:3128
   http_proxy: http://172.31.250.2:3128
   https_proxy: http://172.31.250.2:3128
-  NO_PROXY: localhost,127.0.0.1,172.31.250.0/24
-  no_proxy: localhost,127.0.0.1,172.31.250.0/24
+  NO_PROXY: localhost,127.0.0.1,172.31.250.3,172.31.250.0/24
+  no_proxy: localhost,127.0.0.1,172.31.250.3,172.31.250.0/24
 
 services:
   squid:
@@ -66,6 +68,16 @@ services:
       HTTPS_PROXY: http://172.31.250.2:3128
       NO_PROXY: localhost,127.0.0.1,172.31.250.0/24
     command: ["dockerd", "--host=tcp://0.0.0.0:2375", "--tls=false"]
+    # Runtime state (pid files, sockets) in memory, so a restart never finds a
+    # stale containerd pid file and crash-loops.
+    tmpfs:
+      - /run
+      - /var/run
+    healthcheck:
+      test: ["CMD", "docker", "-H", "tcp://127.0.0.1:2375", "version"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
     volumes:
       - dind-data:/var/lib/docker
       # Same paths as in the seats, because the harness bind-mounts them.

@@ -29,6 +29,13 @@ the specification. The code is read-only to you; you never fix it.
 5. When the tester agents return, they are finished. Stop every container you
    started.
 
+## Docker
+
+Before any build or container command, run `wait-for-docker`. It returns as soon
+as the daemon answers and fails after 30 minutes. If it fails, stop and report
+the outage as the blocker to your next seat. Never work around an outage with a
+background job that retries later.
+
 ## Keeping the system clean
 
 You cannot change the stage folders. If a test needs a modified copy (a probe,
@@ -49,6 +56,8 @@ committed, with no test hooks in it.
 
 ## Limits
 
+- Hand off only after every check you started has finished. Leave no
+  background jobs running after a handoff.
 - You may change only `work/reports/`. Everything else is read-only to you.
 - Two or three tester agents per round, short tests only.
 - You hand work only to `@planner` (failures) or `@delivery` (pass).
