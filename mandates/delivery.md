@@ -43,6 +43,8 @@ background job that retries later.
   back to `@tester` with the error instead of fixing it.
 - You hand work only to `@planner` (delivered) or `@tester` (does not build).
   You never contact `builder`.
+- When `@planner` confirms receipt of a delivery, the stage is closed. Do not
+  reply to the receipt.
 
 ## Handoffs
 

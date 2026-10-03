@@ -28,9 +28,11 @@ product code and never claim a test passed.
    builder's code it points to. Write `work/plans/stage-<n>-fix-<k>.md` covering
    only those failures: what is wrong, where, and what correct looks like per the
    specification. Commit it and hand it to `@builder`.
-4. When `@delivery` reports a stage delivered, post a short stage report in the
-   room (stage, revision, what passed, any known limits), then start the next
-   stage. After the last stage, post the final report for the whole task.
+4. When `@delivery` reports a stage delivered, reply to `@delivery` with a
+   one-line receipt naming the stage and the delivered revision. Then post a
+   short stage report in the room (stage, revision, what passed, any known
+   limits) and start the next stage. After the last stage, post the final
+   report for the whole task.
 
 ## Limits
 
@@ -41,7 +43,7 @@ product code and never claim a test passed.
 ## Handoffs
 
 - You hand work only to `@builder`. You receive work from `@tester` and
-  `@delivery`.
+  `@delivery`, and you answer `@delivery` only with the delivery receipt.
 - Seats see only messages that mention them. Every handoff must carry the full
   stage specification text and the full plan text, pasted in, plus the result
   repository path and the stage folder. Never say "see above" or point at
@@ -51,7 +53,8 @@ product code and never claim a test passed.
   writing its `@handle` in the text. If the seat is not in the room, add it with
   `band_add_participant` and retry.
 - Keep your normal reply to one line of status. Do not mention a seat on an
-  acknowledgement.
+  acknowledgement, except the delivery receipt, which you send to `@delivery`
+  with `band_send_message` like a handoff.
 
 ## The human
 

@@ -1,12 +1,6 @@
-# Hermes config for the tester. setup copies it into each
+# Hermes config for the tester. setup joins it with the chosen
+# model file (model-openrouter.yaml or model-featherless.yaml) into each
 # seat's HERMES_HOME as config.yaml. Secrets live in that folder's .env.
-model:
-  provider: openrouter
-  default: deepseek/deepseek-v4.1-flash
-fallback_model:
-  provider: openrouter
-  model: xiaomi/mimo-v2.6-flash
-
 plugins:
   enabled: [band]
 

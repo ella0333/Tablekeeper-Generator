@@ -17,7 +17,6 @@ Re-running is safe: a seat that is already registered is left alone.
 """
 import os
 import pathlib
-import shutil
 import subprocess
 import sys
 
@@ -58,6 +57,12 @@ def set_env_value(path: pathlib.Path, key: str, value: str) -> None:
     path.write_text("\n".join(lines) + "\n")
 
 
+def remove_env_value(path: pathlib.Path, key: str) -> None:
+    if path.is_file():
+        lines = [l for l in path.read_text().splitlines() if not l.startswith(f"{key}=")]
+        path.write_text("\n".join(lines) + "\n")
+
+
 def main() -> None:
     local = pathlib.Path(os.environ.get("FACTORY_LOCAL", WORKSPACE / "local")).resolve()
     kickoff = pathlib.Path(os.environ.get("KICKOFF_DIR", WORKSPACE / "dark-factory-wearedevs")).resolve()
@@ -71,9 +76,16 @@ def main() -> None:
              f"https://github.com/band-ai/dark-factory-wearedevs there or set KICKOFF_DIR.")
 
     secrets = read_env(local / ".env")
-    openrouter = secrets.get("OPENROUTER_API_KEY", "")
-    if not openrouter:
-        fail(f"Put OPENROUTER_API_KEY in {local / '.env'} (see factory/.env.example).")
+    # OpenRouter is what the submitted run used; Featherless is the alternative.
+    if secrets.get("OPENROUTER_API_KEY"):
+        model_file, key_name = "model-openrouter.yaml", "OPENROUTER_API_KEY"
+    elif secrets.get("FEATHERLESS_API_KEY"):
+        model_file, key_name = "model-featherless.yaml", "FEATHERLESS_API_KEY"
+    else:
+        fail(f"Put OPENROUTER_API_KEY or FEATHERLESS_API_KEY in {local / '.env'} "
+             f"(see factory/.env.example).")
+    model_key = secrets[key_name]
+    print(f"Model provider: {key_name.split('_')[0].lower()}")
 
     checks.mkdir(parents=True, exist_ok=True)
     for sub in ("work/plans", "work/reports"):
@@ -94,9 +106,14 @@ def main() -> None:
         home = local / "seats" / seat
         home.mkdir(parents=True, exist_ok=True)
         template = "tester.yaml" if seat == "tester" else "seat.yaml"
-        shutil.copyfile(FACTORY / "config" / template, home / "config.yaml")
+        (home / "config.yaml").write_text(
+            (FACTORY / "config" / model_file).read_text()
+            + (FACTORY / "config" / template).read_text())
         seat_env = home / ".env"
-        set_env_value(seat_env, "OPENROUTER_API_KEY", openrouter)
+        for other in ("OPENROUTER_API_KEY", "FEATHERLESS_API_KEY"):
+            if other != key_name:
+                remove_env_value(seat_env, other)
+        set_env_value(seat_env, key_name, model_key)
 
         if read_env(seat_env).get("BAND_AGENT_ID"):
             print(f"{seat}: already registered")

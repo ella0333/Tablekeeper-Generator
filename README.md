@@ -1,21 +1,44 @@
 # Band Factory
 
-Entry for the WeAreDevelopers x BAND Dark Factory hackathon, Tablekeeper track.
+This is an entry for the WeAreDevelopers x BAND Dark Factory hackathon, Tablekeeper track. Four coding agents (planner, builder, tester and delivery) work together in a BAND room and build a restaurant reservation app from the organizers' specification, one stage at a time. Each agent runs Hermes Agent in its own locked-down Docker container.
 
-A band of four coding agents (planner, builder, tester, delivery) built the service in this repository from the organizers' specification, one stage at a time, in a BAND Desktop room. `FACTORY.md` explains how the factory works and how to stand it up.
+`FACTORY.md` explains how the agents work together, how the sandbox is built, what a run costs and how the factory catches bad work.
 
-## How to read this repository
+## What is in this repository
 
-| Path | What it is |
-|---|---|
-| `FACTORY.md` | The factory: seats, design choices, sandbox, costs, how it catches bad work |
-| `mandates/` | Each seat's standing instructions, one file per seat |
-| `factory/` | Everything needed to run the factory: container image, compose file, Hermes configs, setup scripts |
-| `stage-1/` to `stage-4/` | The service at each stage, each a complete build with its own `RUN.md` |
-| `work/plans/`, `work/reports/` | The planner's plans and the tester's reports, as the band wrote them |
-| `room.json` | The full BAND room the band worked in |
-| `costs.csv` | Measured model spend per run |
+- `stage-1/` to `stage-4/` hold the app at each stage. Each folder has its own `RUN.md` with the commands to build and start it.
+- `mandates/` holds each agent's standing instructions.
+- `factory/` holds everything needed to run the agents yourself.
+- `room.json` is the full BAND room the agents worked in, and `costs.csv` is the measured model spend.
 
-## Run a stage
+## Run the app
 
-Each stage folder has a `RUN.md` with the commands to build and start that stage's service.
+Build and start the latest stage, then open http://localhost:8080 in your browser:
+
+```
+docker build -t tablekeeper stage-4
+docker run --rm -p 8080:8080 tablekeeper
+```
+
+The app starts with no restaurants. Load some by sending a fixture to `POST /_test/reset`, as described in the stage's `RUN.md`.
+
+## Run the factory yourself
+
+You need Docker, Python 3.12 or newer, a BAND account and a model provider key.
+
+This run used OpenRouter with `deepseek/deepseek-v4.1-flash`. Featherless is supported as an alternative: if you only fill in a Featherless key, setup switches every agent to `deepseek-ai/DeepSeek-V4-Flash` on Featherless. If you switch, update the `Model:` line at the top of each file in `mandates/` to match.
+
+1. Put this repository at `<workspace>/band-work/result` and clone the hackathon kickoff repository to `<workspace>/dark-factory-wearedevs`.
+2. Copy `factory/.env.example` to `<workspace>/local/.env` and fill in a model key and your BAND user API key. This file stays outside the repository.
+3. Register the four agents on your BAND account and build the image:
+   ```
+   python factory/setup.py
+   ```
+4. Start the agents and create a room for them:
+   ```
+   docker compose -f factory/docker-compose.yml up -d
+   python factory/make_room.py "Factory"
+   ```
+5. In that room, mention `@planner` and paste the task. The example lead prompt in the hackathon's participant guide works as it is.
+
+Stop the agents with `docker compose -f factory/docker-compose.yml stop`.
