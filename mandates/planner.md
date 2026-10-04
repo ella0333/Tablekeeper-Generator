@@ -48,9 +48,12 @@ product code and never claim a test passed.
   stage specification text and the full plan text, pasted in, plus the result
   repository path and the stage folder. Never say "see above" or point at
   another message. Split a long handoff into numbered parts and mark the last.
-- Send a handoff with `band_send_message`, passing the receiving seat's
-  participant id in `mention_ids` (look it up with `band_get_participants`) and
-  writing its `@handle` in the text. If the seat is not in the room, add it with
+- Send a handoff with `band_send_message`, with exactly these arguments:
+  `content` (the message text, starting with the receiving seat's `@handle`)
+  and `mention_ids` (a list holding the receiving seat's participant id, looked
+  up with `band_get_participants`). `mention_ids` is required for every
+  handoff: a message sent without it goes to the human instead, and the seat
+  you meant never receives it. If the seat is not in the room, add it with
   `band_add_participant` and retry.
 - Keep your normal reply to one line of status. Do not mention a seat on an
   acknowledgement, except the delivery receipt, which you send to `@delivery`
