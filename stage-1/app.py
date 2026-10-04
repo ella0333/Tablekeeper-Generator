@@ -299,6 +299,8 @@ def build_opening_hours(raw):
 
 def build_restaurant(raw):
     rid = raw.get("id")
+    if "id" in raw and (not isinstance(rid, str) or len(rid) > 64):
+        raise err(422, "validation_failed", "invalid restaurant id")
     tzname = raw.get("timezone")
     try:
         tz = ZoneInfo(tzname)
@@ -308,7 +310,10 @@ def build_restaurant(raw):
     for t in (raw.get("tables") or []):
         if not isinstance(t, dict):
             continue
-        tables.append({"id": t.get("id"), "label": t.get("label"),
+        tid = t.get("id")
+        if "id" in t and (not isinstance(tid, str) or len(tid) > 64):
+            raise err(422, "validation_failed", "invalid table id")
+        tables.append({"id": tid, "label": t.get("label"),
                        "capacity": t.get("capacity")})
     return {
         "id": rid,
@@ -371,6 +376,8 @@ def apply_fixture(fixture: dict):
         if not isinstance(u, dict):
             continue
         uid = u.get("id")
+        if "id" in u and (not isinstance(uid, str) or len(uid) > 64):
+            raise err(422, "validation_failed", "invalid user id")
         email = u.get("email")
         password = u.get("password")
         display = u.get("display_name")
@@ -405,6 +412,18 @@ def apply_fixture(fixture: dict):
     for item in (fixture.get("reservations") or []):
         if not isinstance(item, dict):
             continue
+        sid = item.get("id")
+        if "id" in item and (not isinstance(sid, str) or len(sid) > 64):
+            raise err(422, "validation_failed", "invalid reservation id")
+        srid = item.get("reservation_id")
+        if "reservation_id" in item and (not isinstance(srid, str) or len(srid) > 64):
+            raise err(422, "validation_failed", "invalid reservation_id")
+        supplied_ref = item.get("reference")
+        if supplied_ref is not None:
+            if not isinstance(supplied_ref, str) or not re.match(r"^[A-Z0-9]{6,12}$", supplied_ref):
+                raise err(422, "validation_failed", "invalid reservation reference")
+            if supplied_ref in new_reservations:
+                raise err(422, "validation_failed", "duplicate reservation reference")
         rid = item.get("restaurant_id")
         restaurant = new_restaurants.get(rid)
         if restaurant is None:
@@ -435,7 +454,11 @@ def apply_fixture(fixture: dict):
         if not rec["reservation_id"]:
             rec["reservation_id"] = "res_%s" % secrets.token_hex(6)
         if not rec["reference"]:
-            rec["reference"] = "".join(secrets.choice(REF_ALPHABET) for _ in range(8))
+            while True:
+                cand = "".join(secrets.choice(REF_ALPHABET) for _ in range(8))
+                if cand not in new_reservations:
+                    break
+            rec["reference"] = cand
         new_reservations[rec["reference"]] = rec
 
     STORE.users = new_users
@@ -574,19 +597,26 @@ def idempotency_header(headers):
     return key
 
 
+def _idem_store_key(method, path, key):
+    # Namespace each receipt by method+path+key so a key used on one path is
+    # invisible on another (spec §7: same key + same body on a different path
+    # is a different request, not a replay).
+    return "%s\x00%s\x00%s" % (method, path, key)
+
+
 def check_replay(user_id, key, method, path, body):
     """Return (replayed_response_or_None).  Raises idempotency_key_reuse."""
     user_map = STORE.idem.get(user_id, {})
-    rec = user_map.get(key)
+    rec = user_map.get(_idem_store_key(method, path, key))
     if rec is None:
         return None
-    if rec["method"] == method and rec["path"] == path and rec["body"] == canonical(body):
+    if rec["body"] == canonical(body):
         return rec["response"]
     raise err(409, "idempotency_key_reuse", "key already used with a different body")
 
 
 def store_result(user_id, key, method, path, body, status, response):
-    STORE.idem.setdefault(user_id, {})[key] = {
+    STORE.idem.setdefault(user_id, {})[_idem_store_key(method, path, key)] = {
         "method": method,
         "path": path,
         "body": canonical(body),
