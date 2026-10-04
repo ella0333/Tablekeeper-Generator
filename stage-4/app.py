@@ -2597,7 +2597,9 @@ def handle_replan_preview(user_id, rid, raw, headers, path):
     if replay is not None:
         return 200, replay
     tid = body.get("table_id")
-    if tid is not None and not isinstance(tid, str):
+    if tid is None or tid == "":
+        raise err(422, "validation_failed", "table_id is required")
+    if not isinstance(tid, str):
         raise err(400, "malformed_request", "table_id must be a string")
     if find_table(restaurant, tid) is None:
         raise err(404, "not_found", "no such table")
