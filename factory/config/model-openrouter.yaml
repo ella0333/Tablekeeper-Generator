@@ -1,8 +1,6 @@
-# Model for every seat when OPENROUTER_API_KEY is set (the setup the submitted run used).
 model:
   provider: openrouter
   default: deepseek/deepseek-v4.1-flash
 fallback_model:
   provider: openrouter
   model: xiaomi/mimo-v2.6-flash
-

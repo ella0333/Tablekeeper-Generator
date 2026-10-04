@@ -1,7 +1,4 @@
 #!/bin/sh
-# Blocks until the factory's Docker daemon answers, checking every 10 seconds.
-# Gives up after WAIT_MINUTES (default 30) and exits 1, so a seat can report
-# the outage instead of handing off unchecked work.
 limit=$(( ${WAIT_MINUTES:-30} * 6 ))
 i=0
 until docker version >/dev/null 2>&1; do

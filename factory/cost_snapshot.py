@@ -1,11 +1,4 @@
-"""Record the OpenRouter key's total spend, to measure what a run costs.
-
-    python factory/cost_snapshot.py "stage-1 start"
-    python factory/cost_snapshot.py "stage-1 end"
-
-Appends a row (UTC time, label, total USD spent on the key so far) to costs.csv at
-the repository root. A run's cost is the difference between its two rows.
-"""
+"""Append the OpenRouter key's total spend to costs.csv. Usage: python factory/cost_snapshot.py LABEL"""
 import csv
 import datetime
 import json

@@ -1,17 +1,3 @@
-# The factory: four Hermes seats, a build daemon and an egress proxy.
-#
-# Paths outside this repository come from the environment (setup writes them to
-# factory/.paths.env, which is not committed):
-#   FACTORY_LOCAL  folder holding .env and seats/<seat>/ (keys and BAND logins)
-#   KICKOFF_DIR    the hackathon kickoff checkout (specs, shipped tests, harness)
-#   CHECKS_DIR     where harness runs write their reports
-#
-# Every seat sees the same layout:
-#   /work/dark-factory-wearedevs   kickoff checkout, read-only
-#   /work/band-work/result         this repository (write access differs per seat)
-#   /work/band-work/checks         harness output
-#   /hermes                        the seat's own HERMES_HOME; SOUL.md is its mandate
-
 name: band-factory
 
 x-seat: &seat
@@ -52,10 +38,6 @@ services:
       internal: {ipv4_address: 172.31.250.2}
       egress: {}
 
-  # Private Docker daemon for building and running stage services and the
-  # official harness. Seats never touch the host's Docker. It is privileged
-  # because Docker-in-Docker needs it, but it holds no host paths except the
-  # three below and reaches the internet only through squid.
   dind:
     image: docker:27-dind
     restart: unless-stopped
@@ -68,8 +50,6 @@ services:
       HTTPS_PROXY: http://172.31.250.2:3128
       NO_PROXY: localhost,127.0.0.1,172.31.250.0/24
     command: ["dockerd", "--host=tcp://0.0.0.0:2375", "--tls=false"]
-    # Runtime state (pid files, sockets) in memory, so a restart never finds a
-    # stale containerd pid file and crash-loops.
     tmpfs:
       - /run
       - /var/run
@@ -80,7 +60,6 @@ services:
       retries: 30
     volumes:
       - dind-data:/var/lib/docker
-      # Same paths as in the seats, because the harness bind-mounts them.
       - ${KICKOFF_DIR}:/work/dark-factory-wearedevs:ro
       - ..:/work/band-work/result:ro
       - ${CHECKS_DIR}:/work/band-work/checks
@@ -88,7 +67,6 @@ services:
       internal: {ipv4_address: 172.31.250.3}
     depends_on: [squid]
 
-  # Planner: reads everything, writes only plans. No Docker.
   planner:
     <<: *seat
     environment:
@@ -106,7 +84,6 @@ services:
       - ../.git:/work/band-work/result/.git
       - ${CHECKS_DIR}:/work/band-work/checks:ro
 
-  # Builder: writes the code. Builds and runs it on the private daemon.
   builder:
     <<: *seat
     environment:
@@ -125,7 +102,6 @@ services:
       - .:/work/band-work/result/factory:ro
       - ${CHECKS_DIR}:/work/band-work/checks
 
-  # Tester: code is read-only; writes only reports. Scratch copies go in /tmp.
   tester:
     <<: *seat
     environment:
@@ -144,7 +120,6 @@ services:
       - ../.git:/work/band-work/result/.git
       - ${CHECKS_DIR}:/work/band-work/checks
 
-  # Delivery: tidies and documents the stage folder, confirms it builds.
   delivery:
     <<: *seat
     environment:
@@ -169,8 +144,6 @@ networks:
     ipam:
       config:
         - subnet: 172.31.250.0/24
-          # Dynamic addresses come from the upper half, so squid (.2) and dind (.3)
-          # keep their fixed addresses.
           ip_range: 172.31.250.128/25
   egress: {}
 

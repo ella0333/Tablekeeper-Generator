@@ -1,10 +1,4 @@
-"""Create a BAND room with the four seats in it.
-
-    python factory/make_room.py "Factory"
-
-Uses BAND_USER_API_KEY from the local .env and each seat's BAND_AGENT_ID from
-seats/<seat>/.env (both written by setup.py). Prints the room id.
-"""
+"""Create a BAND room with the four seats in it. Usage: python factory/make_room.py TITLE"""
 import json
 import os
 import pathlib

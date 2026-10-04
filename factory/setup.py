@@ -1,20 +1,4 @@
-"""Stand the factory up: build the seat image, register the four seats on your
-BAND account, and write each seat's Hermes home.
-
-Run from anywhere with Python 3.12+ and Docker running:
-
-    python factory/setup.py
-
-It expects this layout (the hackathon guide's), and you can override the three
-outside paths with environment variables of the same name:
-
-    <workspace>/dark-factory-wearedevs   KICKOFF_DIR
-    <workspace>/band-work/result         this repository
-    <workspace>/band-work/checks         CHECKS_DIR
-    <workspace>/local                    FACTORY_LOCAL (holds .env, never inside the repo)
-
-Re-running is safe: a seat that is already registered is left alone.
-"""
+"""Build the seat image and register the four seats on BAND. Usage: python factory/setup.py"""
 import os
 import pathlib
 import subprocess
@@ -76,7 +60,6 @@ def main() -> None:
              f"https://github.com/band-ai/dark-factory-wearedevs there or set KICKOFF_DIR.")
 
     secrets = read_env(local / ".env")
-    # OpenRouter is what the submitted run used; Featherless is the alternative.
     if secrets.get("OPENROUTER_API_KEY"):
         model_file, key_name = "model-openrouter.yaml", "OPENROUTER_API_KEY"
     elif secrets.get("FEATHERLESS_API_KEY"):
@@ -92,7 +75,6 @@ def main() -> None:
         (REPO / sub).mkdir(parents=True, exist_ok=True)
         (REPO / sub / ".gitkeep").touch()
 
-    # Paths for docker compose, which reads factory/.env on its own. No secrets here.
     (FACTORY / ".env").write_text(
         f"FACTORY_LOCAL={local.as_posix()}\n"
         f"KICKOFF_DIR={kickoff.as_posix()}\n"
@@ -121,8 +103,6 @@ def main() -> None:
         user_key = secrets.get("BAND_USER_API_KEY", "")
         if not user_key:
             fail(f"Put BAND_USER_API_KEY in {local / '.env'} to register {seat}.")
-        # The plugin's own registration helper, run once in a throwaway container.
-        # It saves only the seat's agent id and key into the seat's .env.
         result = subprocess.run(
             ["docker", "run", "--rm", "--entrypoint", "python",
              "-e", "BAND_USER_API_KEY", "-e", "HERMES_HOME=/hermes",

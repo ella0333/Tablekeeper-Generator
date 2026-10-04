@@ -1,2 +1,1 @@
-# Keep LF everywhere; the factory scripts run inside Linux containers.
 * text=auto eol=lf

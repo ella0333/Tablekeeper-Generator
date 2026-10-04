@@ -1,5 +1,3 @@
-# Model for every seat when only FEATHERLESS_API_KEY is set.
-# Featherless serves open-weight models through an OpenAI-compatible API.
 providers:
   featherless:
     api: https://api.featherless.ai/v1
@@ -11,4 +9,3 @@ model:
 fallback_model:
   provider: featherless
   model: zai-org/GLM-5.3-Flash
-

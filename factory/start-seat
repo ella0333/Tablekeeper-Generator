@@ -1,7 +1,4 @@
 #!/bin/sh
-# Seat entrypoint. HOME is a fresh tmpfs, so give the Docker client its proxy
-# settings (builds on the private daemon reach registries only through squid),
-# then run the Hermes gateway.
 mkdir -p "$HOME/.docker"
 cp /etc/docker-client/config.json "$HOME/.docker/config.json"
 exec hermes "$@"

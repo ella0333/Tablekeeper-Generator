@@ -1,24 +1,17 @@
-# Hermes config for the tester. setup joins it with the chosen
-# model file (model-openrouter.yaml or model-featherless.yaml) into each
-# seat's HERMES_HOME as config.yaml. Secrets live in that folder's .env.
 plugins:
   enabled: [band]
 
-# A BAND room is one shared conversation, so one session per room (the plugin's advice).
 group_sessions_per_user: false
 
 platforms:
   band:
     extra:
-      # The gateway trusts BAND's own access control (see the plugin's add-band skill).
       dm_policy: allowlist
       group_policy: allowlist
 
 agent:
   max_turns: 200
 
-# The container is the sandbox, so commands run without approval prompts.
-# A prompt would stall the seat, since nobody answers during a run.
 approvals:
   mode: "off"
 
@@ -27,26 +20,20 @@ terminal:
   cwd: /work/band-work/result
   timeout: 1200
 
-# Hard limits on tester sub-agents, enforced by Hermes whatever the model asks for.
 delegation:
-  max_concurrent_children: 3   # more than 3 at once is rejected
-  max_spawn_depth: 1           # sub-agents cannot spawn their own
+  max_concurrent_children: 3
+  max_spawn_depth: 1
   orchestrator_enabled: false
-  max_iterations: 40           # each sub-agent gets at most 40 steps
-  child_timeout_seconds: 900   # a stuck sub-agent is ended after 15 minutes
+  max_iterations: 40
+  child_timeout_seconds: 900
 
 display:
-  # A handoff split into parts arrives as several messages; queue them instead
-  # of interrupting the run that is reading part 1.
   busy_input_mode: queue
-  # Post only the final reply, not mid-turn narration, so the room stays readable.
   interim_assistant_messages: false
 
 onboarding:
   profile_build: "off"
 
-# Every run starts from the mandate alone: no background self-review, no saved
-# skills or memories carried from one run into the next.
 auxiliary:
   background_review:
     enabled: false
