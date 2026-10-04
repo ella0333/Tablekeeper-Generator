@@ -745,8 +745,10 @@ def apply_fixture(fixture: dict):
     STORE.restaurants = new_restaurants
     STORE.reservations = new_reservations
     STORE.idem = {}
+    STORE.series = {}
     STORE.user_seq = 500
     STORE.res_seq = 500
+    STORE.series_seq = 0
 
 
 def rec_to_json(rec):
