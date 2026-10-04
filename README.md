@@ -4,6 +4,8 @@ This is an entry for the WeAreDevelopers x BAND Dark Factory hackathon, Tablekee
 
 `FACTORY.md` explains how the agents work together, how the sandbox is built, what a run costs and how the factory catches bad work.
 
+The slides are in `submission/tablekeeper-generator-slides.pdf`, and the video is attached to the [submission release](https://github.com/ella0333/band-factory/releases/tag/submission).
+
 ## What is in this repository
 
 - `stage-1/` to `stage-4/` hold the app at each stage. Each folder has its own `RUN.md` with the commands to build and start it.
