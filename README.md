@@ -1,4 +1,4 @@
-# Band Factory
+# Tablekeeper Generator
 
 This is an entry for the WeAreDevelopers x BAND Dark Factory hackathon, Tablekeeper track. Four coding agents (planner, builder, tester and delivery) work together in a BAND room and build a restaurant reservation app from the organizers' specification, one stage at a time. Each agent runs Hermes Agent in its own locked-down Docker container.
 
@@ -17,7 +17,14 @@ Music in the video: stream cafe - cherry blossoms ([youtu.be/ivVQYpGGvuc](https:
 
 ## Run the app
 
-A live demo of stage 4 is at https://tablekeeper-demo-53wm.onrender.com with two sample restaurants loaded. Log in as `guest@example.com` or `manager@example.com`, both with the password `correct horse`. It runs on Render's free tier, so the first visit after a quiet spell takes about 30 seconds to wake up.
+Try the live demo of stage 4 at https://tablekeeper-demo-53wm.onrender.com. It has two sample restaurants loaded and two test logins:
+
+| Role | Email | Password |
+|---|---|---|
+| Guest | `guest@example.com` | `correct horse` |
+| Manager | `manager@example.com` | `correct horse` |
+
+The demo resets itself every 30 minutes, so anything you add is cleared. It runs on Render's free tier, so the first visit after a quiet spell takes about 30 seconds to wake up.
 
 To run it yourself, build and start the latest stage, then open http://localhost:8080 in your browser:
 
