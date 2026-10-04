@@ -17,7 +17,9 @@ Music in the video: stream cafe - cherry blossoms ([youtu.be/ivVQYpGGvuc](https:
 
 ## Run the app
 
-Build and start the latest stage, then open http://localhost:8080 in your browser:
+A live demo of stage 4 is at https://tablekeeper-demo-53wm.onrender.com with two sample restaurants loaded. Log in as `guest@example.com` or `manager@example.com`, both with the password `correct horse`. It runs on Render's free tier, so the first visit after a quiet spell takes about 30 seconds to wake up.
+
+To run it yourself, build and start the latest stage, then open http://localhost:8080 in your browser:
 
 ```
 docker build -t tablekeeper stage-4
