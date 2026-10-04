@@ -79,11 +79,23 @@ Measure a run's model spend with `python factory/cost_snapshot.py "<label>"` bef
 
 ## Costs
 
-To be filled in from `costs.csv` after the submitted run.
+Measured with `factory/cost_snapshot.py` before and after the run (`costs.csv`).
+
+| Run | Model | Time | Model spend |
+|---|---|---|---|
+| All four stages, one dispatch | `deepseek/deepseek-v4.1-flash` on OpenRouter | 2 h 5 min | $2.82 |
+
+That is roughly $0.70 per stage, including every test round and fix round.
 
 ## How it catches and recovers from bad work
 
-To be filled in with examples from the submitted run.
+The tester tests against the specification, not only against the checks that ship with the task, and every fix goes back through the planner so each correction has a written reason in `work/plans/`. In the submitted run the tester rejected three stages on their first round:
+
+- **Stage 1.** Five failures: the state reset accepted fixtures with invalid ids and references, and idempotency keys were not scoped to the request path. The planner wrote one fix plan for all five, the builder fixed them, and the tester passed round two with the full regression suite still green.
+- **Stage 3.** Resetting the service did not clear the recurring-series state. Fix plan, fix, pass in round two.
+- **Stage 4.** A manager's replan preview with no table id returned "not found" instead of a validation error. Fix plan, fix, pass in round two.
+
+Stage 2 passed on its first round. Each report, fix plan and fix is a separate commit by the seat that made it, so the git history shows every rejection and recovery.
 
 Recovery built into the factory:
 
