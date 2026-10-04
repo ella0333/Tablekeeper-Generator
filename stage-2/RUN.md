@@ -94,4 +94,4 @@ Bearer-token protected: `POST /reservations`, `GET /reservations`,
 `PATCH /reservations/{reference}`, `POST /reservation-moves`.
 
 The browser UI signs in with an HttpOnly cookie set by `POST /login` and
-`POST /signup`; the JSON API continues to use `Authorization: Bearer <token>`.
+`POST /signup`; the JSON API continues to use `Authorization: Bearer ***`.

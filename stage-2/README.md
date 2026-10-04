@@ -72,3 +72,22 @@ The service starts with no restaurants. Load some by `POST`ing a fixture to
 - `POST /reservation-moves` accepts `table_ids` per move.
 
 Export stays `format_version: 1`, so a Stage 1 export imports unchanged.
+
+## Push this repository to GitHub
+
+The repository is `main`-branch based. To publish a copy:
+
+```sh
+# 1. create an empty repository on GitHub (no README, no .gitignore) and note its
+#    URL, e.g. https://github.com/<owner>/<repo>.git
+# 2. from the repository root, add it as a remote and push main
+git remote add origin https://github.com/<owner>/<repo>.git
+git push -u origin main
+```
+
+If the remote already exists, adjust it instead:
+
+```sh
+git remote set-url origin https://github.com/<owner>/<repo>.git
+git push -u origin main
+```
