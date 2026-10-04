@@ -6,6 +6,8 @@ This is an entry for the WeAreDevelopers x BAND Dark Factory hackathon, Tablekee
 
 The slides are in `submission/tablekeeper-generator-slides.pdf`, and the video is attached to the [submission release](https://github.com/ella0333/band-factory/releases/tag/submission).
 
+Music in the video: stream cafe - cherry blossoms ([youtu.be/ivVQYpGGvuc](https://youtu.be/ivVQYpGGvuc), [streamcafemusic.com](https://streamcafemusic.com)).
+
 ## What is in this repository
 
 - `stage-1/` to `stage-4/` hold the app at each stage. Each folder has its own `RUN.md` with the commands to build and start it.
