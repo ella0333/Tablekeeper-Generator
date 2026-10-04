@@ -12,6 +12,43 @@ reservations on top of the Stage 1 API and the Stage 2 browser UI.
   dependencies, no run-time network.
 - `RUN.md` — build/run commands, the fixture shape and the endpoint reference.
 
+## Where it lives
+
+This stage lives in the repository at `stage-3/`:
+
+```
+stage-3/
+├── app.py       the service (source)
+├── Dockerfile   builds the runtime image
+├── RUN.md       build/run commands and a sample fixture
+└── README.md    this file
+```
+
+The specifications are `tablekeeper/spec/stage-1.md`, `stage-2.md` and `stage-3.md`
+in the hackathon kickoff repository (not part of this repository).
+
+## Build and run
+
+```sh
+# build the image
+docker build -t tablekeeper-s3 stage-3
+
+# start the service (listens on 0.0.0.0:$PORT, default 8080)
+docker run --rm -p 8080:8080 -e PORT=8080 tablekeeper-s3
+```
+
+No manual setup steps are required. Confirm it is healthy, then open the UI at
+<http://localhost:8080/>:
+
+```sh
+curl -s http://localhost:8080/health
+# {"status": "ok"}
+```
+
+The service starts with no restaurants. Load some by `POST`ing a fixture to
+`/_test/reset` (see `RUN.md` for a complete sample body), then search in the
+browser or use the JSON API.
+
 ## Design notes
 
 - **One global lock.** Every request runs under a single re-entrant lock, so
@@ -39,3 +76,22 @@ reservations on top of the Stage 1 API and the Stage 2 browser UI.
 
 `/`, `/signup`, `/login`, `/lookup` — unchanged from stage 2 and still driven by
 the required `data-testid` attributes.
+
+## Push this repository to GitHub
+
+The repository is `main`-branch based. To publish a copy:
+
+```sh
+# 1. create an empty repository on GitHub (no README, no .gitignore) and note its
+#    URL, e.g. https://github.com/<owner>/<repo>.git
+# 2. from the repository root, add it as a remote and push main
+git remote add origin https://github.com/<owner>/<repo>.git
+git push -u origin main
+```
+
+If the remote already exists, adjust it instead:
+
+```sh
+git remote set-url origin https://github.com/<owner>/<repo>.git
+git push -u origin main
+```
