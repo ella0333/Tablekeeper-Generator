@@ -39,6 +39,6 @@ This run used OpenRouter with `deepseek/deepseek-v4.1-flash`. Featherless is sup
    docker compose -f factory/docker-compose.yml up -d
    python factory/make_room.py "Factory"
    ```
-5. In that room, mention `@planner` and paste the task. The example lead prompt in the hackathon's participant guide works as it is.
+5. In that room, mention `@planner` and paste the task. The example lead prompt in the hackathon's participant guide works, with `/work` as the workspace root, because that is where the agents see the workspace inside their containers.
 
 Stop the agents with `docker compose -f factory/docker-compose.yml stop`.

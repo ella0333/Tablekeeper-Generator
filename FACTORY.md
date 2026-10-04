@@ -77,6 +77,16 @@ You need Docker, Python 3.12+, an OpenRouter or Featherless key and a BAND user 
 
 Measure a run's model spend with `python factory/cost_snapshot.py "<label>"` before and after; rows go to `costs.csv`.
 
+## What we tried that failed
+
+Four practice runs shaped the final factory. Each failure and its fix:
+
+- **The build daemon crash-looped.** After an unexpected stop, the private Docker daemon restarted 173 times on a stale lock file, and the builder handed off unchecked work while a background job kept retrying the build. Fix: the daemon keeps its runtime state in memory so every restart is clean, the seats start only once it is healthy, and the mandates require `wait-for-docker` and forbid handing off with background jobs still running.
+- **The loop only ever moved forward.** The first complete run built all four stages, but no two seats ever addressed each other in both directions, which fails the event's teamwork gate. Fix: the planner now sends delivery a one-line receipt for each delivered stage, and delivery does not answer it.
+- **A handoff reached the human instead of the next seat.** In one run the planner called `band_send_message` without `mention_ids`; the plugin then mentions the humans in the room, so the builder never woke up. Fix: every mandate now spells out the exact arguments and says what happens without them.
+- **Stopping a run only paused it.** Unanswered handoffs are redelivered when the seats reconnect, so an abandoned practice task resumed and wrote into the same stage folder as the next run. Fix: abandoning a run now means removing the seats from its room, resetting the repository and clearing the seats' saved state.
+- **The room was too noisy to follow.** Mid-turn narration, background self-review and saved memories posted to the room and carried knowledge between runs. Fix: they are switched off in the seats' Hermes config, so each run starts from the mandates alone.
+
 ## Costs
 
 Measured with `factory/cost_snapshot.py` before and after the run (`costs.csv`).
